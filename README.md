@@ -14,7 +14,7 @@ This assignment demonstrates setting up a production-style, highly available Doc
 
 ### Custom AMI
 
-A pre-built AMI (`ami-03f5aa64b2abdf080`) was used to launch all EC2 instances. The AMI had the following pre-installed:
+A pre-built AMI (`ami-03f5aa64b2abd7080`) was used to launch all EC2 instances. The AMI had the following pre-installed:
 
 - Docker Engine
 - Supporting packages: `apt-transport-https`, `ca-certificates`, `curl`, `gnupg`, `software-properties-common`
@@ -235,9 +235,66 @@ docker node ls   # Node back to Ready
 | Component | Value |
 |---|---|
 | Cloud Provider | AWS EC2 |
-| AMI | `ami-03f5aa64b2abdf080` (custom, Docker pre-installed) |
+| AMI | `ami-03f5aa64b2abd7080` (custom, Docker pre-installed) |
 | Number of Nodes | 5 (3 managers, 2 workers) |
 | Docker Engine Version | 29.3.1 |
-| Swarm Manager (Leader)
+| Swarm Manager (Leader) | `ip-172-31-71-106` |
 | Service Deployed | Nginx (4 replicas, port 8080) |
-| Security Group 
+| Security Group | `sg-06e25aa628401582` |
+
+---
+
+## Terraform Automation
+
+The `terraform/` directory contains a complete Terraform configuration that automates everything done manually in this tutorial.
+
+### Files
+
+| File | Purpose |
+|---|---|
+| `main.tf` | Security group, EC2 instances, Swarm bootstrap via `local-exec` |
+| `variables.tf` | All configurable inputs |
+| `outputs.tf` | Public IPs, Nginx URL, SSH command |
+| `nginx.yaml` | Nginx stack definition (same as deployed manually) |
+| `terraform.tfvars.example` | Template for your variable values |
+
+### Usage
+
+```bash
+cd terraform
+
+# 1. Copy and fill in your values
+cp terraform.tfvars.example terraform.tfvars
+# edit terraform.tfvars with your key name, key path, etc.
+
+# 2. Initialize Terraform
+terraform init
+
+# 3. Preview the plan
+terraform plan
+
+# 4. Apply — provisions all 5 nodes and bootstraps the Swarm
+terraform apply
+
+# 5. Tear everything down when done
+terraform destroy
+```
+
+### What it does
+
+1. Creates a **security group** with all required Swarm ports (2377, 7946, 4789) scoped to the VPC
+2. Launches **5 EC2 instances** (1 primary manager, 2 additional managers, 2 workers) using the custom Docker AMI
+3. Runs a **bootstrap script** via `local-exec` that:
+   - Waits for all nodes to be SSH-ready
+   - Runs `docker swarm init` on the primary manager
+   - Fetches manager and worker join tokens
+   - Joins the remaining nodes to the Swarm
+   - Deploys the Nginx stack with 4 replicas
+4. Outputs the **Nginx URL** and **SSH command** to the terminal
+
+### Requirements
+
+- Terraform >= 1.0
+- AWS credentials configured (`aws configure` or environment variables)
+- An existing EC2 key pair in the target region
+- The custom AMI (`ami-03f5aa64b2abd7080`) available in your region

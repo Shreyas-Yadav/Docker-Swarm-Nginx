@@ -1,0 +1,14 @@
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfvars
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/*.tfplan
+
+# SSH keys
+*.pem
+*.key
+
+# macOS
+.DS_Store

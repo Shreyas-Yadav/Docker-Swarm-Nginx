@@ -1,0 +1,9 @@
+# Copy this file to terraform.tfvars and fill in your values.
+# Never commit terraform.tfvars to source control.
+
+aws_region       = "us-east-1"
+ami_id           = "ami-03f5aa64b2abd7080"
+instance_type    = "t2.micro"
+key_name         = "aws-key"
+private_key_path = "~/.ssh/aws-key.pem"
+ssh_cidr         = "0.0.0.0/0"   # Restrict to your IP, e.g. "203.0.113.5/32"
